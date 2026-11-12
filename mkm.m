@@ -16,7 +16,7 @@ x = repmat([1;0;0], 1, n);       % x(:,i): x axis of body frame {i}, in {0}
 y = repmat([0;1;0], 1, n);       % y(:,i): y axis of body frame {i}, in {0}
 z = repmat([0;0;1], 1, n);       % z(:,i): z axis of body frame {i}, in {0}
 
-dtheta = [0 90 0 0 0]*pi/180;      % joint rotations: pre-initial -> initial [rad], one per joint
+dtheta = zeros(1,n)*pi/180;      % joint rotations: pre-initial -> initial [rad], one per joint
 
 skew = @(a) [ 0     -a(3)   a(2);
               a(3)   0     -a(1);
@@ -43,6 +43,26 @@ phit(:, 6*n-5:6*n) = [  eye(3)         zeros(3);
 H = zeros(6*n, n);
 for i = 1:n
     H(6*i-5:6*i-3, i) = h(:,i);      % H_i = [h_i; 0] in block row i, column i
+end
+
+phi = eye(6*n);
+for i = 1:n-1
+    phi = phi + diag(ones(1, 6*(n-i)), -6*i);
+end
+for i = 1:n-1
+    r = 6*(i+1)-2 : 6*(i+1);       % rows: lower half of block row i+1
+    c = 6*i-5     : 6*i-3;         % columns: left half of block column i
+    phi(r, c) = -skew(L(:,i));     % phi_{i+1,i}: -l_{i,i+1} x
+end
+
+for i = 3:n
+    for j = 1:i-2
+        r  = 6*i-2     : 6*i;          % rows: lower half of block row i
+        rp = 6*(i-1)-2 : 6*(i-1);      % rows: lower half of block row i-1
+        c  = 6*j-5     : 6*j-3;        % columns: left half of block column j
+        cd = 6*(i-1)-5 : 6*(i-1)-3;    % columns: left half of block column i-1
+        phi(r, c) = phi(rp, c) + phi(r, cd);
+    end
 end
 
 %[appendix]{"version":"1.0"}
