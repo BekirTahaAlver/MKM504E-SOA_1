@@ -16,7 +16,7 @@ x = repmat([1;0;0], 1, n);       % x(:,i): x axis of body frame {i}, in {0}
 y = repmat([0;1;0], 1, n);       % y(:,i): y axis of body frame {i}, in {0}
 z = repmat([0;0;1], 1, n);       % z(:,i): z axis of body frame {i}, in {0}
 
-dtheta = zeros(1,n)*pi/180;      % joint rotations: pre-initial -> initial [rad], one per joint
+dtheta = [0 90 0 0 0]*pi/180;      % joint rotations: pre-initial -> initial [rad], one per joint
 
 skew = @(a) [ 0     -a(3)   a(2);
               a(3)   0     -a(1);
@@ -39,6 +39,11 @@ L = x.*Lb(1,:) + y.*Lb(2,:) + z.*Lb(3,:);   % link vectors in {0}: l_12, l_23, l
 phit = zeros(6, 6*n);
 phit(:, 6*n-5:6*n) = [  eye(3)         zeros(3);
     -skew(L(:,n))   eye(3)   ];     % phi_tn
+
+H = zeros(6*n, n);
+for i = 1:n
+    H(6*i-5:6*i-3, i) = h(:,i);      % H_i = [h_i; 0] in block row i, column i
+end
 
 %[appendix]{"version":"1.0"}
 %---
