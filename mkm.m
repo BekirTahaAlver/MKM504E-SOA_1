@@ -17,6 +17,7 @@ y = repmat([0;1;0], 1, n);       % y(:,i): y axis of body frame {i}, in {0}
 z = repmat([0;0;1], 1, n);       % z(:,i): z axis of body frame {i}, in {0}
 
 dtheta = zeros(1,n)*pi/180;      % joint rotations: pre-initial -> initial [rad], one per joint
+%dtheta = [30 45 20 -60 15]*pi/180
 
 skew = @(a) [ 0     -a(3)   a(2);
               a(3)   0     -a(1);
@@ -65,8 +66,25 @@ for i = 3:n
     end
 end
 
+J = phit*phi*H;                  % [w_t; v_t] = J * thetadot
+
+p = zeros(3, n+1);               % p(:,i): joint point i, p(:,n+1): tip t
+for i = 1:n
+    p(:,i+1) = p(:,i) + L(:,i);
+end
+
+Jc = zeros(6, n);
+for i = 1:n
+    Jc(:,i) = [h(:,i); cross(h(:,i), p(:,n+1) - p(:,i))];
+end
+
+max(abs(J(:) - Jc(:)))           % should be ~1e-16 %[output:1de73a47]
+
 %[appendix]{"version":"1.0"}
 %---
 %[metadata:view]
 %   data: {"layout":"onright","rightPanelPercent":46.9}
+%---
+%[output:1de73a47]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"5.5511e-17"}}
 %---
